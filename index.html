@@ -1,486 +1,1234 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أداة تصميم ملخصات مرجان - فريق النخبة</title>
-    <!-- مكتبة تصدير الصور -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محرر مرجان المتقدم</title>
 
-        :root {
-            --primary: #114a31; /* أخضر مرجان عميق */
-            --primary-light: #1b6b47;
-            --secondary: #c29b49; /* ذهبي أنيق */
-            --secondary-light: #fdfaf3; /* خلفية الملاحظات */
-            --text-dark: #2c3e50;
-            --bg-page: #e8ecef;
-        }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg-page);
-            margin: 0;
-            display: flex;
-            color: var(--text-dark);
-            overflow-x: hidden;
-        }
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
-        /* --- شريط الأدوات --- */
-        .toolbar {
-            width: 340px;
-            background: #ffffff;
-            padding: 20px;
-            height: 100vh;
-            box-shadow: -4px 0 20px rgba(0,0,0,0.08);
-            position: fixed;
-            right: 0;
-            top: 0;
-            overflow-y: auto;
-            z-index: 100;
-            box-sizing: border-box;
-            border-left: 3px solid var(--secondary);
-        }
+:root{
+    --primary:#114a31;
+    --primary-light:#1b6b47;
+    --secondary:#c29b49;
+    --bg-page:#dcdde1;
+    --text-dark:#2c3e50;
+    --danger:#e74c3c;
+}
 
-        .toolbar h2 {
-            color: var(--primary);
-            font-family: 'Amiri', serif;
-            text-align: center;
-            border-bottom: 2px dashed var(--secondary);
-            padding-bottom: 12px;
-            margin-top: 0;
-            font-size: 24px;
-        }
+*{box-sizing:border-box}
 
-        .section-title { font-size: 14px; color: #7f8c8d; margin-bottom: 10px; font-weight: bold; }
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
 
-        .control-group { margin-bottom: 20px; }
-        .grid-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        
-        .btn {
-            padding: 10px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-family: 'Tajawal', sans-serif;
-            font-weight: 700;
-            font-size: 13px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
+body{
+    font-family:'Tajawal',sans-serif;
+    background:var(--bg-page);
+    color:var(--text-dark);
+    display:flex;
+}
 
-        .btn:hover { background-color: var(--primary-light); transform: translateY(-2px); }
-        .btn-full { width: 100%; grid-column: span 2; }
-        .btn-gold { background-color: var(--secondary); color: #fff; }
-        .btn-gold:hover { background-color: #a8853b; }
-        .btn-danger { background-color: #e74c3c; }
-        .btn-danger:hover { background-color: #c0392b; }
-        .btn-export { background: linear-gradient(45deg, #27ae60, #2ecc71); font-size: 15px; padding: 12px;}
-        .btn-export:hover { box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4); }
+button,input{font-family:inherit}
 
-        input[type="range"] { width: 100%; margin: 8px 0 15px 0; accent-color: var(--primary); }
-        label { font-size: 13px; font-weight: bold; color: #444; }
+.mobile-toggle{
+    display:none;position:fixed;top:10px;right:10px;z-index:300;
+    background:var(--primary);color:#fff;border:0;padding:10px 15px;
+    border-radius:7px;cursor:pointer;font-weight:700
+}
 
-        /* --- مساحة العمل والورقة --- */
-        .workspace {
-            margin-right: 340px;
-            padding: 40px;
-            width: calc(100% - 340px);
-            display: flex;
-            justify-content: center;
-            box-sizing: border-box;
-        }
+.sidebar{
+    width:320px;height:100vh;flex:none;background:#fff;
+    box-shadow:-4px 0 20px rgba(0,0,0,.08);
+    position:relative;z-index:100;display:flex;flex-direction:column
+}
+.sidebar-header{padding:15px;background:var(--primary);color:#fff;text-align:center}
+.sidebar-header h2{margin:0;font-family:'Amiri',serif;font-size:22px}
+.save-status{font-size:11px;color:#a2e8c6;margin-top:5px}
+.sidebar-content{padding:15px;overflow-y:auto;flex:1}
+.section-title{
+    font-size:12px;color:#7f8c8d;margin:15px 0 8px;font-weight:700;
+    border-bottom:1px solid #eee;padding-bottom:4px
+}
+.grid-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.btn{
+    padding:8px 10px;background:#f1f2f6;color:var(--text-dark);
+    border:1px solid #dfe4ea;border-radius:6px;cursor:pointer;
+    font-weight:700;font-size:12px;transition:.2s
+}
+.btn:hover{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-full{grid-column:span 2}
+.btn-gold{background:var(--secondary);color:#fff;border:0}
+.btn-gold:hover{background:#a8853b}
+.btn-action{background:var(--primary);color:#fff;border:0}
 
-        .a4-page {
-            width: 210mm;
-            min-height: 297mm;
-            background: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            position: relative;
-            box-sizing: border-box;
-            padding: 10mm;
-            display: flex;
-            flex-direction: column;
-        }
+.range-row{font-size:11px;margin-top:8px}
+.range-row label{display:flex;justify-content:space-between}
+input[type=range]{width:100%;accent-color:var(--primary);margin:5px 0}
 
-        /* الإطار الاحترافي المزدوج */
-        .page-border {
-            flex-grow: 1;
-            border: 3px solid var(--primary);
-            padding: 12mm 15mm;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
-        }
-        .page-border::before {
-            content: ''; position: absolute;
-            top: 4px; left: 4px; right: 4px; bottom: 4px;
-            border: 1px solid var(--secondary);
-            border-radius: 2px;
-            pointer-events: none;
-            z-index: 5;
-        }
+.top-toolbar{
+    position:fixed;top:0;right:320px;left:0;height:45px;background:#fff;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);display:flex;align-items:center;
+    padding:0 15px;gap:6px;z-index:90
+}
+.format-btn{
+    background:#fff;border:1px solid #ddd;padding:5px 9px;border-radius:4px;
+    cursor:pointer;font-weight:700
+}
+.format-btn:hover{background:#f1f2f6}
+.zoom-controls{margin-right:auto;display:flex;gap:5px;align-items:center}
 
-        /* --- العلامة المائية --- */
-        .watermark-container {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 0; pointer-events: none;
-            width: 100%; display: flex;
-            justify-content: center; align-items: center;
-        }
-        .watermark-container img { max-width: 80%; max-height: 80%; opacity: 0.1; display: none; }
+.workspace-container{
+    flex:1;height:100vh;padding-top:45px;overflow:auto;position:relative
+}
+.workspace{
+    padding:30px;display:flex;flex-direction:column;align-items:center;
+    gap:30px;transform-origin:top center;transition:transform .15s ease
+}
 
-        /* --- طبقة المحتوى --- */
-        .content-layer { position: relative; z-index: 10; display: flex; flex-direction: column; flex-grow: 1; }
+.a4-page{
+    width:210mm;height:297mm;min-width:210mm;min-height:297mm;
+    flex:none;background:#fff;box-shadow:0 5px 20px rgba(0,0,0,.1);
+    position:relative;padding:10mm;overflow:hidden;
+    page-break-after:always;break-after:page;break-inside:avoid;
+    border:2px solid transparent;transition:.15s;cursor:pointer;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.a4-page.active-page{
+    border-color:var(--secondary);
+    box-shadow:0 0 15px rgba(194,155,73,.3)
+}
 
-        /* الهيدر العلوي */
-        .header-section {
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 2px solid var(--primary);
-            padding-bottom: 8px; margin-bottom: 15px;
-        }
+.page-border{
+    width:100%;height:100%;border:3px solid var(--primary);
+    padding:10mm 12mm;position:relative;display:flex;
+    flex-direction:column;border-radius:4px;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.page-border::before{
+    content:'';position:absolute;top:4px;left:4px;right:4px;bottom:4px;
+    border:1px solid var(--secondary);border-radius:2px;
+    pointer-events:none;z-index:5
+}
 
-        .logo-box {
-            width: 60px; height: 60px; /* تم التصغير بناء على طلبك */
-            border: 1px dashed #bdc3c7; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; background: #f8f9fa; overflow: hidden;
-        }
-        .logo-box img { width: 100%; height: 100%; object-fit: contain; display: none; }
-        .logo-box span { font-size: 10px; color: #95a5a6; text-align: center; }
+.watermark-overlay{
+    position:absolute;inset:0;z-index:0;pointer-events:none;
+    display:flex;justify-content:center;align-items:center;overflow:hidden
+}
+.watermark-overlay img{object-fit:contain;max-width:100%;max-height:100%}
 
-        .header-text {
-            font-family: 'Amiri', serif; font-size: 22px; font-weight: bold;
-            color: var(--primary); text-align: center; flex-grow: 1;
-            outline: none;
-        }
+.overflow-warning{
+    display:none;position:absolute;top:5px;left:5px;background:var(--danger);
+    color:#fff;font-size:10px;padding:3px 6px;border-radius:3px;
+    z-index:60;font-weight:700
+}
+.has-overflow .overflow-warning{display:block}
 
-        /* العنوان الرئيسي */
-        .main-title {
-            font-family: 'Amiri', serif; font-size: 32px;
-            color: var(--secondary); text-align: center;
-            margin: 0 0 20px 0; font-weight: bold; outline: none;
-        }
-        .main-title span { color: var(--primary); }
+.page-controls{
+    position:absolute;left:-38px;top:0;display:flex;flex-direction:column;
+    gap:5px;z-index:80
+}
+.page-btn{
+    background:var(--danger);color:#fff;border:0;border-radius:50%;
+    width:26px;height:26px;cursor:pointer
+}
 
-        /* --- منطقة العناصر الديناميكية --- */
-        .content-area { flex-grow: 1; }
-        
-        .block-wrapper { position: relative; margin-bottom: 15px; transition: 0.3s; }
-        
-        /* زر الحذف الذكي */
-        .delete-btn {
-            position: absolute; right: -35px; top: 5px;
-            background: #e74c3c; color: white;
-            border: none; border-radius: 50%;
-            width: 24px; height: 24px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px; opacity: 0; transition: 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 50;
-        }
-        .block-wrapper:hover .delete-btn { opacity: 1; }
-        
-        /* تأثير التعديل */
-        [contenteditable="true"] { outline: none; transition: 0.2s; }
-        [contenteditable="true"]:hover { background-color: rgba(194, 155, 73, 0.05); border-radius: 4px; }
+.content-layer{
+    position:relative;z-index:10;display:flex;flex-direction:column;
+    height:100%;min-height:0
+}
+.content-area{
+    flex:1;overflow:hidden;min-height:0;display:flex;
+    flex-direction:column;gap:0
+}
 
-        /* 1. النصوص العادية والعناوين */
-        .block-title { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
-        .block-text { font-size: 16px; line-height: 1.8; text-align: justify; color: var(--text-dark); }
-        .block-list { list-style: none; padding: 0; margin: 10px 0; }
-        .block-list li { margin-bottom: 8px; font-size: 16px; position: relative; padding-right: 20px; }
-        .block-list li::before { content: "❖"; color: var(--secondary); position: absolute; right: 0; font-size: 14px; top: 3px; }
+.block-wrapper{
+    position:relative;margin-bottom:12px;border:1px solid transparent;
+    border-radius:4px;flex:none
+}
+.block-wrapper:hover{border:1px dashed #bdc3c7}
+.block-controls{
+    position:absolute;right:-43px;top:0;display:flex;flex-direction:column;
+    gap:2px;opacity:0;transition:.2s;z-index:50
+}
+.block-wrapper:hover .block-controls{opacity:1}
+.ctrl-btn{
+    background:#34495e;color:#fff;border:0;border-radius:3px;
+    width:25px;height:25px;cursor:pointer;font-size:10px
+}
+.ctrl-btn:disabled{opacity:.35;cursor:not-allowed}
+.ctrl-btn.del{background:var(--danger)}
 
-        /* 2. المربعات الاحترافية (الأدوات الجديدة) */
-        .info-box {
-            background-color: var(--secondary-light);
-            border-right: 4px solid var(--secondary);
-            padding: 12px 15px; border-radius: 4px 0 0 4px;
-            font-size: 15.5px; line-height: 1.7;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        }
-        .info-box strong { color: var(--primary); font-size: 17px; }
+[contenteditable=true]{outline:none;cursor:text}
+[contenteditable=true]:focus{outline:1px dashed rgba(17,74,49,.35);outline-offset:2px}
 
-        .def-box {
-            background-color: rgba(17, 74, 49, 0.04);
-            border: 1px solid rgba(17, 74, 49, 0.15);
-            padding: 15px; border-radius: 8px;
-            text-align: center; font-size: 16px;
-        }
-        .def-box .def-title {
-            display: block; font-family: 'Amiri', serif; font-size: 22px;
-            color: var(--primary); font-weight: bold; margin-bottom: 5px;
-        }
+.block-title{
+    font-size:20px;font-weight:800;color:var(--primary);
+    margin-bottom:5px;font-family:'Amiri',serif
+}
+.block-text{font-size:15px;line-height:1.7;text-align:justify}
+.info-box{
+    background:#fdfaf3;border-right:4px solid var(--secondary);
+    padding:10px 12px;border-radius:4px
+}
+.block-list{font-size:15px;line-height:1.8}
+.block-list ul,.block-list ol{margin:5px 0;padding-right:25px}
 
-        /* 3. جدول المقارنة */
-        .compare-table {
-            display: grid; grid-template-columns: 1fr 1fr;
-            border: 2px solid var(--primary); border-radius: 8px; overflow: hidden;
-            text-align: center; margin-top: 10px;
-        }
-        .compare-header { background: var(--primary); color: white; padding: 10px; font-weight: bold; font-size: 17px; }
-        .compare-cell { padding: 12px; border-top: 1px solid #ddd; background: white; font-size: 15px; line-height: 1.6; }
-        .compare-cell:first-child, .compare-header:first-child { border-left: 1px solid #ddd; }
+table.morjan-table{
+    width:100%;border-collapse:collapse;margin-top:5px;text-align:center;
+    font-size:13px;table-layout:fixed
+}
+table.morjan-table th{
+    background:var(--primary);color:#fff;padding:8px;
+    border:1px solid var(--primary);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+table.morjan-table td{padding:8px;border:1px solid #ddd}
 
-        /* --- التذييل المطور (Footer) --- */
-        .footer-section {
-            display: flex; justify-content: space-between; margin-top: auto; padding-top: 25px;
-        }
-        .footer-box {
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: #ffffff; padding: 10px 25px; border-radius: 8px;
-            font-weight: 700; font-size: 14.5px; outline: none;
-            box-shadow: 0 4px 12px rgba(17, 74, 49, 0.2);
-            border: 1px solid var(--secondary);
-            min-width: 160px; text-align: center;
-        }
+.header-section{
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:2px solid var(--primary);padding-bottom:8px;
+    margin-bottom:12px;gap:10px;flex:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.logo-box{
+    width:55px;height:55px;border:1px dashed #ccc;display:flex;
+    align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+    flex:none;background:#fff
+}
+.logo-box:hover{border-color:var(--secondary)}
+.logo-box img{max-width:100%;max-height:100%;object-fit:contain}
+.header-text{
+    font-family:'Amiri',serif;font-size:22px;font-weight:700;
+    color:var(--primary);text-align:center;flex:1;min-width:0
+}
 
-        /* إخفاء عناصر أثناء التصدير كصورة أو الطباعة */
-        .exporting .delete-btn { display: none !important; }
-        .exporting [contenteditable="true"]:hover { background-color: transparent !important; }
-        
-        @media print {
-            @page { size: A4; margin: 0; }
-            body { background: white; margin: 0; }
-            .toolbar { display: none !important; }
-            .workspace { margin: 0; padding: 0; width: 100%; }
-            .a4-page { margin: 0; box-shadow: none; width: 210mm; height: 297mm; page-break-after: always; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .delete-btn { display: none !important; }
-            .logo-box { border: none; background: transparent; }
-            .logo-box span { display: none; }
-        }
-    </style>
+.footer-section{
+    display:flex;justify-content:space-between;gap:10px;
+    margin-top:auto;padding-top:10px;flex:none
+}
+.footer-box{
+    background:linear-gradient(135deg,var(--primary),var(--primary-light));
+    color:#fff;padding:6px 16px;border-radius:4px;font-weight:700;
+    font-size:13px;max-width:48%;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact
+}
+.page-number{text-align:center;font-size:11px;color:#7f8c8d;margin-top:4px;flex:none}
+
+.toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:#263238;color:#fff;padding:9px 15px;border-radius:6px;
+    font-size:12px;opacity:0;pointer-events:none;transition:.25s;z-index:500
+}
+.toast.show{opacity:1}
+
+.exporting .block-controls,.exporting .page-controls{display:none!important}
+.exporting .block-wrapper{border:none!important}
+.exporting .a4-page.active-page{
+    border-color:transparent!important;box-shadow:none!important
+}
+.exporting .workspace{
+    transform:none!important;
+    transition:none!important
+}
+
+/* الطباعة: الحفاظ على الألوان + صفحة واحدة لكل ورقة */
+@media print{
+    @page{size:A4 portrait;margin:0}
+
+    *,
+    *::before,
+    *::after{
+        -webkit-print-color-adjust:exact!important;
+        print-color-adjust:exact!important;
+    }
+
+    html,body{
+        overflow:visible!important;height:auto!important;
+        width:100%!important;background:#fff!important
+    }
+    body{display:block!important}
+
+    .sidebar,.top-toolbar,.mobile-toggle,.block-controls,.page-controls,
+    .overflow-warning,.toast{display:none!important}
+
+    .workspace-container{
+        display:block!important;padding:0!important;height:auto!important;
+        overflow:visible!important
+    }
+
+    .workspace{
+        display:block!important;padding:0!important;margin:0!important;
+        gap:0!important;transform:none!important
+    }
+
+    .a4-page{
+        display:block!important;box-shadow:none!important;margin:0!important;
+        border:none!important;width:210mm!important;height:297mm!important;
+        min-width:210mm!important;min-height:297mm!important;
+        max-width:210mm!important;max-height:297mm!important;
+        overflow:hidden!important;page-break-before:auto!important;
+        page-break-after:always!important;break-after:page!important;
+        break-inside:avoid!important
+    }
+    .a4-page:last-child{
+        page-break-after:auto!important;break-after:auto!important
+    }
+
+    .page-border{
+        width:100%!important;height:100%!important;
+        overflow:hidden!important
+    }
+
+    .content-area{overflow:hidden!important}
+}
+
+/* الهاتف */
+@media(max-width:768px){
+    .mobile-toggle{display:block}
+    .sidebar{
+        position:fixed;right:-320px;top:0;bottom:0;
+        transition:right .3s ease
+    }
+    .sidebar.open{right:0}
+    .top-toolbar{right:0;padding-right:65px;overflow-x:auto}
+    .workspace{align-items:flex-start}
+}
+</style>
 </head>
+
 <body>
 
-    <!-- شريط الأدوات -->
-    <div class="toolbar">
-        <h2>أدوات التصميم</h2>
-        
-        <div class="control-group">
-            <div class="section-title">إضافة عناصر أساسية:</div>
-            <div class="grid-btns">
-                <button class="btn" onclick="addElement('title')">عنوان جانبي</button>
-                <button class="btn" onclick="addElement('text')">فقرة نصية</button>
-                <button class="btn btn-full" onclick="addElement('list')">قائمة منسقة (نقاط)</button>
-            </div>
-        </div>
+<button class="mobile-toggle" onclick="toggleSidebar()">☰ القائمة</button>
 
-        <div class="control-group">
-            <div class="section-title">أدوات مرجان الاحترافية:</div>
-            <div class="grid-btns">
-                <button class="btn btn-gold" onclick="addElement('info')">💡 مربع ملاحظة</button>
-                <button class="btn btn-gold" onclick="addElement('def')">📌 مربع تعريف</button>
-                <button class="btn btn-gold btn-full" onclick="addElement('table')">⚖️ جدول مقارنة</button>
-            </div>
-        </div>
-
-        <div class="control-group">
-            <div class="section-title">إعدادات العلامة المائية:</div>
-            <input type="file" id="watermarkInput" accept="image/*" style="display: none;" onchange="loadWatermark(event)">
-            <button class="btn btn-full" style="background:#34495e;" onclick="document.getElementById('watermarkInput').click()">رفع شعار للوسط</button>
-            
-            <label>الشفافية:</label>
-            <input type="range" id="opacityRange" min="0" max="100" value="10" oninput="updateWatermark()">
-            
-            <label>الحجم:</label>
-            <input type="range" id="sizeRange" min="20" max="150" value="80" oninput="updateWatermark()">
-        </div>
-
-        <div class="control-group" style="margin-top: 30px;">
-            <button class="btn btn-full btn-export" onclick="exportToImage()">📸 تحميل كصورة عالية الدقة</button>
-            <button class="btn btn-full" style="background:#2c3e50; margin-top:8px;" onclick="window.print()">🖨️ حفظ كـ PDF</button>
-            <button class="btn btn-full btn-danger" style="margin-top:8px;" onclick="clearContent()">🗑 تفريغ المحتوى</button>
-        </div>
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>محرر مرجان المتقدم</h2>
+        <div class="save-status" id="saveStatus">🟢 جاهز</div>
     </div>
 
-    <!-- مساحة العمل -->
-    <div class="workspace">
-        <div class="a4-page" id="printableArea">
+    <div class="sidebar-content">
+        <div class="section-title">إدارة المشروع والصفحات</div>
+        <div class="grid-btns">
+            <button class="btn btn-action" onclick="undo()">↶ تراجع</button>
+            <button class="btn btn-action" onclick="redo()">↷ إعادة</button>
+            <button class="btn btn-full" onclick="addPage()">📄 إضافة صفحة جديدة</button>
+            <button class="btn" onclick="exportJSON()">📁 تصدير JSON</button>
+            <button class="btn" onclick="document.getElementById('importFile').click()">📂 استيراد JSON</button>
+            <input type="file" id="importFile" accept=".json" hidden onchange="importJSON(event)">
+        </div>
+
+        <div class="section-title">العلامة المائية</div>
+        <button class="btn btn-full" onclick="document.getElementById('wmInput').click()">رفع صورة العلامة المائية</button>
+        <input type="file" id="wmInput" accept="image/*" hidden onchange="handleWatermark(event)">
+
+        <div class="range-row">
+            <label><span>الشفافية</span><b id="opacityValue">10%</b></label>
+            <input id="opacityRange" type="range" min="0" max="100" value="10"
+                   oninput="previewWatermark('opacity',this.value)"
+                   onchange="commitWatermark()">
+        </div>
+
+        <div class="range-row">
+            <label><span>الحجم</span><b id="sizeValue">80%</b></label>
+            <input id="sizeRange" type="range" min="20" max="150" value="80"
+                   oninput="previewWatermark('size',this.value)"
+                   onchange="commitWatermark()">
+        </div>
+
+        <div class="section-title">إضافة عناصر للصفحة النشطة</div>
+        <div class="grid-btns">
+            <button class="btn" onclick="addBlock('title')">عنوان</button>
+            <button class="btn" onclick="addBlock('text')">فقرة</button>
+            <button class="btn btn-full" onclick="addBlock('list')">قائمة نقاط</button>
+            <button class="btn btn-gold" onclick="addBlock('info')">💡 ملاحظة</button>
+            <button class="btn btn-gold" onclick="addTable()">⚖️ جدول</button>
+        </div>
+
+        <div class="section-title">التصدير والطباعة</div>
+        <div class="grid-btns">
+            <button class="btn btn-full btn-action" style="background:#e74c3c" onclick="exportPDF()">📕 تصدير PDF</button>
+            <button class="btn btn-full btn-action" style="background:#27ae60" onclick="exportImages()">📸 تصدير PNG</button>
+            <button class="btn btn-full" onclick="window.print()">🖨️ طباعة Ctrl+P</button>
+            <button class="btn btn-full" style="color:#c0392b" onclick="clearProject()">🗑️ مسح المشروع</button>
+        </div>
+    </div>
+</aside>
+
+<div class="top-toolbar">
+    <button class="format-btn" title="غامق" onclick="formatSelection('bold')"><b>B</b></button>
+    <button class="format-btn" title="مائل" onclick="formatSelection('italic')"><i>I</i></button>
+    <button class="format-btn" title="تحته خط" onclick="formatSelection('underline')"><u>U</u></button>
+    <button class="format-btn" title="محاذاة يمين" onclick="formatSelection('justifyRight')">☰</button>
+    <button class="format-btn" title="توسيط" onclick="formatSelection('justifyCenter')">≡</button>
+    <button class="format-btn" title="محاذاة يسار" onclick="formatSelection('justifyLeft')">☰</button>
+    <input id="colorPicker" type="color" title="لون النص"
+           onchange="formatSelection('foreColor',this.value)"
+           style="width:32px;height:28px;border:0;background:none;cursor:pointer">
+
+    <div class="zoom-controls">
+        <button class="format-btn" onclick="changeZoom(-0.1)">−</button>
+        <span id="zoomLevel" style="font-weight:700;font-size:12px">100%</span>
+        <button class="format-btn" onclick="changeZoom(0.1)">+</button>
+        <button class="format-btn" onclick="resetZoom()">100%</button>
+    </div>
+</div>
+
+<main class="workspace-container" id="workspaceContainer">
+    <div class="workspace" id="workspace"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'morjan_json_state_v5';
+const MAX_HISTORY = 30;
+
+let state = createDefaultState();
+let activePageIndex = 0;
+let historyStack = [];
+let historyIndex = -1;
+let zoom = 1;
+let saveTimer = null;
+let typingTimer = null;
+let selectionRange = null;
+
+function createDefaultState(){
+    return {
+        version:5,
+        watermark:{url:'',opacity:.10,size:80},
+        pages:[{
+            id:uid('page'),
+            header:'أصول الفقه | الملخصات',
+            footerRight:'فريق النخبة',
+            footerLeft:'إعداد: همام الكانمي',
+            rightLogo:'',
+            leftLogo:'',
+            blocks:[
+                {id:uid('b'),type:'title',content:'الدرس الأول: بين الوحي والسنة'},
+                {id:uid('b'),type:'text',content:'اكتب نص الملخص التعليمي هنا بسهولة...'},
+                {id:uid('b'),type:'info',content:'<b>💡 ملاحظة هامة:</b> السنة النبوية هي المصدر الثاني للتشريع.'}
+            ]
+        }]
+    };
+}
+
+function uid(prefix){
+    return prefix+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,8);
+}
+
+function deepClone(obj){
+    return JSON.parse(JSON.stringify(obj));
+}
+
+function showToast(message){
+    const el=document.getElementById('toast');
+    el.textContent=message;
+    el.classList.add('show');
+    clearTimeout(showToast.timer);
+    showToast.timer=setTimeout(()=>el.classList.remove('show'),1800);
+}
+
+function saveLocal(){
+    try{
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+        document.getElementById('saveStatus').textContent='🟢 تم الحفظ: '+new Date().toLocaleTimeString();
+    }catch(e){
+        document.getElementById('saveStatus').textContent='🔴 تعذر الحفظ';
+        showToast('حجم المشروع كبير جدًا على التخزين المحلي');
+    }
+}
+
+function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(saveLocal,250);
+}
+
+function commitHistory(){
+    const snapshot=JSON.stringify(state);
+
+    if(historyStack[historyIndex]===snapshot){
+        saveLocal();
+        return;
+    }
+
+    historyStack=historyStack.slice(0,historyIndex+1);
+    historyStack.push(snapshot);
+
+    if(historyStack.length>MAX_HISTORY) historyStack.shift();
+
+    historyIndex=historyStack.length-1;
+    saveLocal();
+}
+
+function undo(){
+    if(historyIndex<=0){
+        showToast('لا توجد خطوة للتراجع');
+        return;
+    }
+    historyIndex--;
+    state=JSON.parse(historyStack[historyIndex]);
+    activePageIndex=Math.min(activePageIndex,state.pages.length-1);
+    render();
+    saveLocal();
+}
+
+function redo(){
+    if(historyIndex>=historyStack.length-1){
+        showToast('لا توجد خطوة للإعادة');
+        return;
+    }
+    historyIndex++;
+    state=JSON.parse(historyStack[historyIndex]);
+    activePageIndex=Math.min(activePageIndex,state.pages.length-1);
+    render();
+    saveLocal();
+}
+
+function init(){
+    const saved=localStorage.getItem(STORAGE_KEY);
+
+    if(saved){
+        try{
+            const parsed=JSON.parse(saved);
+            if(validateProject(parsed)) state=normalizeProject(parsed);
+        }catch(e){}
+    }
+
+    historyStack=[JSON.stringify(state)];
+    historyIndex=0;
+
+    syncWatermarkControls();
+    render();
+}
+
+function validateProject(obj){
+    return obj &&
+        Array.isArray(obj.pages) &&
+        obj.pages.length>0 &&
+        obj.watermark &&
+        typeof obj.watermark==='object';
+}
+
+function normalizeProject(obj){
+    obj.version=5;
+
+    obj.watermark.opacity=Number(obj.watermark.opacity);
+    if(!Number.isFinite(obj.watermark.opacity)) obj.watermark.opacity=.1;
+
+    obj.watermark.size=Number(obj.watermark.size);
+    if(!Number.isFinite(obj.watermark.size)) obj.watermark.size=80;
+
+    obj.pages=obj.pages.map(page=>({
+        id:page.id||uid('page'),
+        header:page.header??'',
+        footerRight:page.footerRight??'',
+        footerLeft:page.footerLeft??'',
+        rightLogo:page.rightLogo||'',
+        leftLogo:page.leftLogo||'',
+        blocks:Array.isArray(page.blocks)?page.blocks.map(block=>({
+            id:block.id||uid('b'),
+            type:block.type||'text',
+            content:block.content??''
+        })):[],
+    }));
+
+    return obj;
+}
+
+function render(){
+    const container=document.getElementById('workspace');
+    container.innerHTML='';
+
+    if(!state.pages.length){
+        state.pages=[{
+            id:uid('page'),header:'',footerRight:'',footerLeft:'',
+            rightLogo:'',leftLogo:'',blocks:[]
+        }];
+    }
+
+    activePageIndex=Math.max(0,Math.min(activePageIndex,state.pages.length-1));
+
+    state.pages.forEach((page,pIndex)=>{
+        const pageEl=document.createElement('div');
+        pageEl.className='a4-page'+(pIndex===activePageIndex?' active-page':'');
+        pageEl.dataset.pageIndex=pIndex;
+
+        pageEl.addEventListener('click',e=>{
+            if(e.target.closest('.block-wrapper') ||
+               e.target.closest('button') ||
+               e.target.closest('input') ||
+               e.target.closest('[contenteditable=true]') ||
+               e.target.closest('.logo-box')) return;
+
+            if(activePageIndex!==pIndex){
+                activePageIndex=pIndex;
+                render();
+            }
+        });
+
+        pageEl.innerHTML=`
+            <div class="overflow-warning">⚠️ المحتوى تجاوز حدود الصفحة!</div>
             <div class="page-border">
-                
-                <!-- العلامة المائية -->
-                <div class="watermark-container">
-                    <img id="watermarkImage" src="" alt="Watermark">
+
+                <div class="watermark-overlay">
+                    ${state.watermark.url ?
+                        `<img class="watermark-img"
+                              src="${escapeAttr(state.watermark.url)}"
+                              style="opacity:${state.watermark.opacity};width:${state.watermark.size}%">`
+                        : ''}
+                </div>
+
+                <div class="page-controls">
+                    <button class="page-btn"
+                            onclick="deletePage(${pIndex})"
+                            title="حذف الصفحة">✖</button>
                 </div>
 
                 <div class="content-layer">
-                    
-                    <!-- الهيدر -->
+
                     <div class="header-section">
-                        <div class="logo-box" onclick="document.getElementById('projectLogoInput').click()">
-                            <span id="projText">شعار<br>المشروع</span>
-                            <img id="projectLogoImg" src="">
-                            <input type="file" id="projectLogoInput" accept="image/*" style="display: none;" onchange="loadImage(event, 'projectLogoImg', 'projText')">
+                        <div class="logo-box"
+                             onclick="triggerUpload('rightLogo',${pIndex})">
+                            ${page.rightLogo ?
+                                `<img src="${escapeAttr(page.rightLogo)}">` :
+                                '<span style="font-size:10px;color:#aaa">شعار</span>'}
                         </div>
 
-                        <div class="header-text" contenteditable="true">أصول الفقه | الملخصات</div>
+                        <div class="header-text"
+                             contenteditable="true"
+                             data-editor="header"
+                             data-page="${pIndex}">${page.header}</div>
 
-                        <div class="logo-box" onclick="document.getElementById('teamLogoInput').click()">
-                            <span id="teamText">شعار<br>الفريق</span>
-                            <img id="teamLogoImg" src="">
-                            <input type="file" id="teamLogoInput" accept="image/*" style="display: none;" onchange="loadImage(event, 'teamLogoImg', 'teamText')">
+                        <div class="logo-box"
+                             onclick="triggerUpload('leftLogo',${pIndex})">
+                            ${page.leftLogo ?
+                                `<img src="${escapeAttr(page.leftLogo)}">` :
+                                '<span style="font-size:10px;color:#aaa">شعار</span>'}
                         </div>
                     </div>
 
-                    <!-- العنوان -->
-                    <div class="main-title" contenteditable="true">
-                        <span>الدرس الأول:</span> بين الوحي والسنة
-                    </div>
+                    <div class="content-area"></div>
 
-                    <!-- المحتوى الديناميكي -->
-                    <div class="content-area" id="contentArea">
-                        
-                        <!-- أمثلة جاهزة كبداية -->
-                        <div class="block-wrapper">
-                            <button class="delete-btn" onclick="this.parentElement.remove()" title="حذف">✖</button>
-                            <div class="block-title" contenteditable="true">مقدمة الدرس:</div>
-                        </div>
-                        
-                        <div class="block-wrapper">
-                            <button class="delete-btn" onclick="this.parentElement.remove()">✖</button>
-                            <div class="block-text" contenteditable="true">هذا القالب الجديد مصمم خصيصاً ليناسب المشاريع التعليمية باحترافية عالية. يمكنك التعديل على أي نص، حذف أي عنصر، وإضافة ما تحتاجه من القائمة الجانبية.</div>
-                        </div>
-
-                        <div class="block-wrapper">
-                            <button class="delete-btn" onclick="this.parentElement.remove()">✖</button>
-                            <div class="info-box" contenteditable="true">
-                                <strong>💡 ملاحظة هامة:</strong> السنة النبوية هي المصدر الثاني للتشريع الإسلامي بعد القرآن الكريم.
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- التذييل الاحترافي -->
                     <div class="footer-section">
-                        <div class="footer-box" contenteditable="true">@Morjan_Project</div>
-                        <div class="footer-box" contenteditable="true">إعداد: همام الكانمي</div>
+                        <div class="footer-box"
+                             contenteditable="true"
+                             data-editor="footerRight"
+                             data-page="${pIndex}">${page.footerRight}</div>
+
+                        <div class="footer-box"
+                             contenteditable="true"
+                             data-editor="footerLeft"
+                             data-page="${pIndex}">${page.footerLeft}</div>
                     </div>
 
+                    <div class="page-number">
+                        صفحة ${pIndex+1} من ${state.pages.length}
+                        ${pIndex===activePageIndex?'(نشطة)':''}
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+        `;
 
-    <!-- أكواد الجافاسكربت -->
-    <script>
-        // دوال الصور والعلامة المائية
-        function loadImage(event, imgId, textId) {
-            const file = event.target.files[0];
-            if (file) {
-                document.getElementById(imgId).src = URL.createObjectURL(file);
-                document.getElementById(imgId).style.display = 'block';
-                document.getElementById(textId).style.display = 'none';
-            }
-        }
+        container.appendChild(pageEl);
 
-        function loadWatermark(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const img = document.getElementById('watermarkImage');
-                img.src = URL.createObjectURL(file);
-                img.style.display = 'block';
-            }
-        }
+        const area=pageEl.querySelector('.content-area');
 
-        function updateWatermark() {
-            const img = document.getElementById('watermarkImage');
-            img.style.opacity = document.getElementById('opacityRange').value / 100;
-            img.style.width = document.getElementById('sizeRange').value + '%';
-        }
+        page.blocks.forEach((block,bIndex)=>{
+            const wrapper=document.createElement('div');
+            wrapper.className='block-wrapper';
+            wrapper.dataset.blockIndex=bIndex;
 
-        // دالة إنشاء العناصر الديناميكية مع زر الحذف
-        function addElement(type) {
-            const area = document.getElementById('contentArea');
-            const wrapper = document.createElement('div');
-            wrapper.className = 'block-wrapper';
-            
-            let innerHTML = `<button class="delete-btn" onclick="this.parentElement.remove()" title="حذف العنصر">✖</button>`;
-            
-            switch(type) {
-                case 'title':
-                    innerHTML += `<div class="block-title" contenteditable="true">عنوان جانبي جديد</div>`;
-                    break;
-                case 'text':
-                    innerHTML += `<div class="block-text" contenteditable="true">اكتب النص أو الفقرة هنا...</div>`;
-                    break;
-                case 'list':
-                    innerHTML += `
-                        <ul class="block-list" contenteditable="true">
-                            <li>النقطة الأولى</li>
-                            <li>النقطة الثانية</li>
-                            <li>النقطة الثالثة</li>
-                        </ul>`;
-                    break;
-                case 'info':
-                    innerHTML += `
-                        <div class="info-box" contenteditable="true">
-                            <strong>💡 ملاحظة هامة:</strong> اكتب نص الملاحظة هنا...
-                        </div>`;
-                    break;
-                case 'def':
-                    innerHTML += `
-                        <div class="def-box" contenteditable="true">
-                            <span class="def-title">مصطلح جديد</span>
-                            اكتب تعريف المصطلح أو المفهوم بشكل واضح هنا.
-                        </div>`;
-                    break;
-                case 'table':
-                    innerHTML += `
-                        <div class="compare-table">
-                            <div class="compare-header" contenteditable="true">وجه المقارنة الأول</div>
-                            <div class="compare-header" contenteditable="true">وجه المقارنة الثاني</div>
-                            <div class="compare-cell" contenteditable="true">اكتب النص هنا</div>
-                            <div class="compare-cell" contenteditable="true">اكتب النص هنا</div>
-                        </div>`;
-                    break;
-            }
-            
-            wrapper.innerHTML = innerHTML;
+            wrapper.innerHTML=`
+                <div class="block-controls">
+                    <button class="ctrl-btn"
+                        onclick="moveBlock(${pIndex},${bIndex},-1)"
+                        ${bIndex===0?'disabled':''}
+                        title="لأعلى">🔼</button>
+
+                    <button class="ctrl-btn"
+                        onclick="moveBlock(${pIndex},${bIndex},1)"
+                        ${bIndex===page.blocks.length-1?'disabled':''}
+                        title="لأسفل">🔽</button>
+
+                    <button class="ctrl-btn"
+                        onclick="moveBlockToPage(${pIndex},${bIndex},-1)"
+                        ${pIndex===0?'disabled':''}
+                        title="للصفحة السابقة">◀</button>
+
+                    <button class="ctrl-btn"
+                        onclick="moveBlockToPage(${pIndex},${bIndex},1)"
+                        ${pIndex===state.pages.length-1?'disabled':''}
+                        title="للصفحة التالية">▶</button>
+
+                    <button class="ctrl-btn"
+                        onclick="duplicateBlock(${pIndex},${bIndex})"
+                        title="تكرار">📑</button>
+
+                    <button class="ctrl-btn del"
+                        onclick="deleteBlock(${pIndex},${bIndex})"
+                        title="حذف">✖</button>
+                </div>
+
+                <div class="${getBlockClass(block.type)}"
+                     contenteditable="true"
+                     data-editor="block"
+                     data-page="${pIndex}"
+                     data-block="${bIndex}">${block.content}</div>
+            `;
+
             area.appendChild(wrapper);
-            // التمرير للأسفل تلقائياً عند الإضافة
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        });
+
+        setupEditors(pageEl);
+        observeOverflow(pageEl);
+    });
+
+    syncWatermarkControls();
+}
+
+function setupEditors(pageEl){
+    pageEl.querySelectorAll('[contenteditable=true]').forEach(editor=>{
+        editor.addEventListener('focus',()=>saveSelection());
+        editor.addEventListener('mouseup',saveSelection);
+        editor.addEventListener('keyup',saveSelection);
+
+        editor.addEventListener('input',()=>{
+            updateEditorState(editor,false);
+            clearTimeout(typingTimer);
+            typingTimer=setTimeout(()=>commitHistory(),700);
+        });
+
+        editor.addEventListener('blur',()=>updateEditorState(editor,true));
+    });
+}
+
+function updateEditorState(editor,history=true){
+    const p=Number(editor.dataset.page);
+    const type=editor.dataset.editor;
+
+    if(!state.pages[p]) return;
+
+    if(type==='header'){
+        state.pages[p].header=editor.innerHTML;
+    }else if(type==='footerRight'){
+        state.pages[p].footerRight=editor.innerHTML;
+    }else if(type==='footerLeft'){
+        state.pages[p].footerLeft=editor.innerHTML;
+    }else if(type==='block'){
+        const b=Number(editor.dataset.block);
+        if(state.pages[p].blocks[b]) state.pages[p].blocks[b].content=editor.innerHTML;
+    }
+
+    scheduleSave();
+
+    if(history){
+        clearTimeout(typingTimer);
+        commitHistory();
+    }
+}
+
+function getBlockClass(type){
+    if(type==='title') return 'block-title';
+    if(type==='info') return 'info-box';
+    if(type==='list') return 'block-list';
+    if(type==='table') return '';
+    return 'block-text';
+}
+
+function addPage(){
+    const first=state.pages[0]||{rightLogo:'',leftLogo:''};
+
+    state.pages.push({
+        id:uid('page'),
+        header:'أصول الفقه | الملخصات',
+        footerRight:'فريق النخبة',
+        footerLeft:'إعداد: همام الكانمي',
+        rightLogo:first.rightLogo||'',
+        leftLogo:first.leftLogo||'',
+        blocks:[]
+    });
+
+    activePageIndex=state.pages.length-1;
+    commitHistory();
+    render();
+    scrollToActivePage();
+}
+
+function deletePage(index){
+    if(state.pages.length<=1){
+        showToast('يجب أن يحتوي المشروع على صفحة واحدة على الأقل');
+        return;
+    }
+
+    if(!confirm('هل أنت متأكد من حذف هذه الصفحة؟')) return;
+
+    state.pages.splice(index,1);
+    activePageIndex=Math.max(0,Math.min(index-1,state.pages.length-1));
+
+    commitHistory();
+    render();
+}
+
+function addBlock(type){
+    const page=state.pages[activePageIndex];
+    if(!page) return;
+
+    let content='نص جديد...';
+    if(type==='title') content='عنوان فرعي جديد';
+    if(type==='info') content='<b>💡 ملاحظة:</b> اكتب التنبيه هنا...';
+    if(type==='list') content='<ul><li>نقطة أولى</li><li>نقطة ثانية</li></ul>';
+
+    page.blocks.push({id:uid('b'),type,content});
+
+    commitHistory();
+    render();
+}
+
+function addTable(){
+    let r=parseInt(prompt('عدد صفوف الجدول؟','3'),10);
+    let c=parseInt(prompt('عدد أعمدة الجدول؟','2'),10);
+
+    if(!Number.isInteger(r)||!Number.isInteger(c)||r<1||c<1||r>30||c>15){
+        showToast('أدخل عددًا صحيحًا مناسبًا: الصفوف 1–30 والأعمدة 1–15');
+        return;
+    }
+
+    let html='<table class="morjan-table"><thead><tr>';
+    for(let i=0;i<c;i++) html+=`<th>عنوان ${i+1}</th>`;
+    html+='</tr></thead><tbody>';
+
+    for(let i=0;i<r;i++){
+        html+='<tr>';
+        for(let j=0;j<c;j++) html+='<td>نص</td>';
+        html+='</tr>';
+    }
+
+    html+='</tbody></table>';
+
+    state.pages[activePageIndex].blocks.push({
+        id:uid('b'),type:'table',content:html
+    });
+
+    commitHistory();
+    render();
+}
+
+function moveBlock(pIndex,bIndex,dir){
+    const blocks=state.pages[pIndex].blocks;
+    const target=bIndex+dir;
+    if(target<0||target>=blocks.length) return;
+
+    [blocks[bIndex],blocks[target]]=[blocks[target],blocks[bIndex]];
+    commitHistory();
+    render();
+}
+
+function moveBlockToPage(pIndex,bIndex,dir){
+    const target=pIndex+dir;
+    if(target<0||target>=state.pages.length) return;
+
+    const block=state.pages[pIndex].blocks.splice(bIndex,1)[0];
+    state.pages[target].blocks.push(block);
+    activePageIndex=target;
+
+    commitHistory();
+    render();
+}
+
+function duplicateBlock(pIndex,bIndex){
+    const original=state.pages[pIndex].blocks[bIndex];
+    const copy=deepClone(original);
+    copy.id=uid('b');
+
+    state.pages[pIndex].blocks.splice(bIndex+1,0,copy);
+    commitHistory();
+    render();
+}
+
+function deleteBlock(pIndex,bIndex){
+    if(!confirm('حذف هذا العنصر؟')) return;
+
+    state.pages[pIndex].blocks.splice(bIndex,1);
+    commitHistory();
+    render();
+}
+
+function triggerUpload(key,pIndex){
+    const input=document.createElement('input');
+    input.type='file';
+    input.accept='image/*';
+
+    input.onchange=e=>{
+        const file=e.target.files?.[0];
+        if(!file) return;
+
+        if(file.size>5*1024*1024){
+            showToast('يفضل استخدام صورة أقل من 5MB');
         }
 
-        function clearContent() {
-            if(confirm("هل أنت متأكد من مسح جميع عناصر الملخص؟")) {
-                document.getElementById('contentArea').innerHTML = '';
+        const reader=new FileReader();
+
+        reader.onload=ev=>{
+            state.pages[pIndex][key]=ev.target.result;
+            commitHistory();
+            render();
+        };
+
+        reader.readAsDataURL(file);
+    };
+
+    input.click();
+}
+
+function handleWatermark(e){
+    const file=e.target.files?.[0];
+    if(!file) return;
+
+    const reader=new FileReader();
+
+    reader.onload=ev=>{
+        state.watermark.url=ev.target.result;
+        commitHistory();
+        render();
+    };
+
+    reader.readAsDataURL(file);
+    e.target.value='';
+}
+
+function previewWatermark(key,value){
+    value=Number(value);
+
+    if(key==='opacity'){
+        document.getElementById('opacityValue').textContent=value+'%';
+        document.querySelectorAll('.watermark-img')
+            .forEach(img=>img.style.opacity=value/100);
+    }
+
+    if(key==='size'){
+        document.getElementById('sizeValue').textContent=value+'%';
+        document.querySelectorAll('.watermark-img')
+            .forEach(img=>img.style.width=value+'%');
+    }
+}
+
+function commitWatermark(){
+    state.watermark.opacity=Number(document.getElementById('opacityRange').value)/100;
+    state.watermark.size=Number(document.getElementById('sizeRange').value);
+    commitHistory();
+}
+
+function syncWatermarkControls(){
+    const opacity=Math.round(state.watermark.opacity*100);
+    const size=Math.round(state.watermark.size);
+
+    document.getElementById('opacityRange').value=opacity;
+    document.getElementById('opacityValue').textContent=opacity+'%';
+
+    document.getElementById('sizeRange').value=size;
+    document.getElementById('sizeValue').textContent=size+'%';
+}
+
+function saveSelection(){
+    const sel=window.getSelection();
+    if(!sel||!sel.rangeCount) return;
+
+    const node=sel.anchorNode;
+    if(!node) return;
+
+    const editor=node.nodeType===1 ?
+        node.closest?.('[contenteditable=true]') :
+        node.parentElement?.closest?.('[contenteditable=true]');
+
+    if(editor) selectionRange=sel.getRangeAt(0).cloneRange();
+}
+
+function restoreSelection(){
+    if(!selectionRange) return;
+
+    const sel=window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(selectionRange);
+}
+
+function formatSelection(command,value=null){
+    restoreSelection();
+
+    try{
+        document.execCommand('styleWithCSS',false,true);
+        document.execCommand(command,false,value);
+    }catch(e){ return; }
+
+    const sel=window.getSelection();
+    if(sel&&sel.anchorNode){
+        const editor=sel.anchorNode.parentElement?.closest?.('[contenteditable=true]');
+        if(editor){
+            updateEditorState(editor,false);
+            commitHistory();
+            saveSelection();
+        }
+    }
+}
+
+function changeZoom(delta){
+    zoom=Math.max(.5,Math.min(1.5,Math.round((zoom+delta)*10)/10));
+    applyZoom();
+}
+
+function resetZoom(){
+    zoom=1;
+    applyZoom();
+}
+
+function applyZoom(){
+    const workspace=document.getElementById('workspace');
+    workspace.style.transform=`scale(${zoom})`;
+    document.getElementById('zoomLevel').textContent=Math.round(zoom*100)+'%';
+}
+
+function toggleSidebar(){
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+function scrollToActivePage(){
+    setTimeout(()=>{
+        document.querySelector('.a4-page.active-page')
+            ?.scrollIntoView({behavior:'smooth',block:'center'});
+    },50);
+}
+
+function observeOverflow(pageEl){
+    const area=pageEl.querySelector('.content-area');
+    if(!area) return;
+
+    const check=()=>{
+        pageEl.classList.toggle('has-overflow',area.scrollHeight>area.clientHeight+2);
+    };
+
+    requestAnimationFrame(check);
+    setTimeout(check,150);
+}
+
+function exportJSON(){
+    const blob=new Blob(
+        [JSON.stringify(state,null,2)],
+        {type:'application/json;charset=utf-8'}
+    );
+    downloadBlob(blob,'مشروع_مرجان.json');
+}
+
+function importJSON(e){
+    const file=e.target.files?.[0];
+    if(!file) return;
+
+    const reader=new FileReader();
+
+    reader.onload=ev=>{
+        try{
+            const parsed=JSON.parse(ev.target.result);
+
+            if(!validateProject(parsed)){
+                showToast('ملف JSON غير صالح');
+                return;
             }
+
+            state=normalizeProject(parsed);
+            activePageIndex=0;
+            historyStack=[JSON.stringify(state)];
+            historyIndex=0;
+
+            saveLocal();
+            render();
+            showToast('تم استيراد المشروع بنجاح');
+        }catch(err){
+            showToast('تعذر قراءة ملف JSON');
+        }
+    };
+
+    reader.readAsText(file);
+    e.target.value='';
+}
+
+function downloadBlob(blob,name){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+
+    a.href=url;
+    a.download=name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/*
+ * تصدير PDF جديد:
+ * لا نرسل workspace كاملًا إلى html2pdf حتى لا يقوم بمحاولة
+ * تقسيم عناصر الصفحة أو إعادة تدفق النص العربي.
+ * يتم تصوير كل A4 منفردًا ثم وضعه كصورة كاملة داخل صفحة PDF A4.
+ */
+async function exportPDF(){
+    if(typeof html2canvas==='undefined' || !window.jspdf?.jsPDF){
+        showToast('مكتبات التصدير غير متاحة');
+        return;
+    }
+
+    const workspace=document.getElementById('workspace');
+    const oldTransform=workspace.style.transform;
+
+    document.body.classList.add('exporting');
+    workspace.style.transform='none';
+
+    try{
+        if(document.fonts?.ready) await document.fonts.ready;
+
+        const pages=[...document.querySelectorAll('.a4-page')];
+        if(!pages.length){
+            showToast('لا توجد صفحات للتصدير');
+            return;
         }
 
-        // دالة التصدير كصورة عالية الدقة
-        function exportToImage() {
-            const element = document.getElementById('printableArea');
-            
-            // إضافة كلاس لإخفاء أزرار الحذف وتأثيرات التحديد أثناء التصوير
-            document.body.classList.add('exporting');
-            
-            // تأخير بسيط لضمان تطبيق كلاس الإخفاء
-            setTimeout(() => {
-                html2canvas(element, {
-                    scale: 3, // جودة عالية جداً
-                    useCORS: true,
-                    backgroundColor: "#ffffff"
-                }).then(canvas => {
-                    let link = document.createElement('a');
-                    link.download = 'ملخص_مرجان_تصميم.png';
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    
-                    // إزالة الكلاس بعد الانتهاء
-                    document.body.classList.remove('exporting');
-                });
-            }, 100);
+        const {jsPDF}=window.jspdf;
+
+        const pdf=new jsPDF({
+            orientation:'portrait',
+            unit:'mm',
+            format:'a4',
+            compress:true
+        });
+
+        for(let i=0;i<pages.length;i++){
+            const page=pages[i];
+
+            const canvas=await html2canvas(page,{
+                scale:2,
+                useCORS:true,
+                allowTaint:false,
+                backgroundColor:'#ffffff',
+                logging:false,
+                imageTimeout:15000,
+                width:page.offsetWidth,
+                height:page.offsetHeight,
+                windowWidth:Math.max(document.documentElement.clientWidth,page.offsetWidth),
+                windowHeight:Math.max(document.documentElement.clientHeight,page.offsetHeight),
+                scrollX:0,
+                scrollY:0
+            });
+
+            if(i>0) pdf.addPage('a4','p');
+
+            const imgData=canvas.toDataURL('image/jpeg',0.98);
+            pdf.addImage(imgData,'JPEG',0,0,210,297,undefined,'FAST');
         }
-    </script>
+
+        pdf.save('ملخص_مرجان.pdf');
+        showToast('تم تصدير PDF بنجاح — صفحة A4 لكل صفحة');
+    }catch(e){
+        console.error(e);
+        showToast('حدث خطأ أثناء تصدير PDF');
+    }finally{
+        workspace.style.transform=oldTransform;
+        document.body.classList.remove('exporting');
+    }
+}
+
+async function exportImages(){
+    if(typeof html2canvas==='undefined'){
+        showToast('مكتبة الصور غير متاحة');
+        return;
+    }
+
+    const workspace=document.getElementById('workspace');
+    const oldTransform=workspace.style.transform;
+
+    document.body.classList.add('exporting');
+    workspace.style.transform='none';
+
+    try{
+        if(document.fonts?.ready) await document.fonts.ready;
+
+        const pages=[...document.querySelectorAll('.a4-page')];
+
+        for(let i=0;i<pages.length;i++){
+            const canvas=await html2canvas(pages[i],{
+                scale:3,
+                useCORS:true,
+                allowTaint:false,
+                backgroundColor:'#ffffff',
+                logging:false,
+                imageTimeout:15000,
+                width:pages[i].offsetWidth,
+                height:pages[i].offsetHeight,
+                scrollX:0,
+                scrollY:0
+            });
+
+            const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+
+            if(blob) downloadBlob(blob,`ملخص_صفحة_${i+1}.png`);
+            await new Promise(r=>setTimeout(r,120));
+        }
+
+        showToast('تم تصدير الصفحات بصيغة PNG');
+    }catch(e){
+        console.error(e);
+        showToast('حدث خطأ أثناء تصدير الصور');
+    }finally{
+        workspace.style.transform=oldTransform;
+        document.body.classList.remove('exporting');
+    }
+}
+
+function clearProject(){
+    if(!confirm('سيتم حذف المشروع المحفوظ وإعادة المحرر للوضع الافتراضي. هل أنت متأكد؟')) return;
+
+    localStorage.removeItem(STORAGE_KEY);
+    state=createDefaultState();
+    activePageIndex=0;
+    historyStack=[JSON.stringify(state)];
+    historyIndex=0;
+
+    render();
+    saveLocal();
+    showToast('تم بدء مشروع جديد');
+}
+
+function escapeAttr(value){
+    return String(value)
+        .replace(/&/g,'&amp;')
+        .replace(/"/g,'&quot;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;');
+}
+
+document.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){
+        e.preventDefault();
+        if(e.shiftKey) redo();
+        else undo();
+    }
+
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){
+        e.preventDefault();
+        redo();
+    }
+});
+
+window.addEventListener('beforeprint',()=>{
+    document.body.classList.add('exporting');
+    document.getElementById('workspace').style.transform='none';
+});
+
+window.addEventListener('afterprint',()=>{
+    document.body.classList.remove('exporting');
+    applyZoom();
+});
+
+window.addEventListener('load',init);
+</script>
 </body>
 </html>
