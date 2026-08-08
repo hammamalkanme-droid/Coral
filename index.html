@@ -382,7 +382,43 @@ table.morjan-table td{padding:8px;border:1px solid #ddd}
 </div>
 
 <main class="workspace-container" id="workspaceContainer">
-    <div class="workspace" id="workspace"></div>
+    <div class="workspace" id="workspace">
+    <div class="a4-page active-page" id="initialPageFallback">
+        <div class="page-border">
+            <div class="watermark-overlay">
+                <img src="logom.png" alt="" style="opacity:.10;width:80%;object-fit:contain"
+                     onerror="this.style.display='none'">
+            </div>
+            <div class="content-layer">
+                <div class="header-section">
+                    <div class="logo-box">
+                        <img src="logoR.png" alt="شعار اليمين" onerror="this.style.display='none'">
+                    </div>
+                    <div class="header-text">أصول الفقه | الملخصات</div>
+                    <div class="logo-box">
+                        <img src="logol.png" alt="شعار اليسار" onerror="this.style.display='none'">
+                    </div>
+                </div>
+                <div class="content-area">
+                    <div class="block-wrapper">
+                        <div class="block-title">الدرس الأول: بين الوحي والسنة</div>
+                    </div>
+                    <div class="block-wrapper">
+                        <div class="block-text">اكتب نص الملخص التعليمي هنا بسهولة...</div>
+                    </div>
+                    <div class="block-wrapper">
+                        <div class="info-box"><b>💡 ملاحظة هامة:</b> السنة النبوية هي المصدر الثاني للتشريع.</div>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <div class="footer-box">فريق النخبة</div>
+                    <div class="footer-box">إعداد: همام الكانمي</div>
+                </div>
+                <div class="page-number">صفحة 1 من 1</div>
+            </div>
+        </div>
+    </div>
+</div>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -408,9 +444,10 @@ let selectionRange = null;
 // logom.png = الشعار الوسطي/العلامة المائية
 // ==========================================
 const TEMPLATE_ASSETS = {
-    rightLogo: './logoR.png',
-    leftLogo: './logol.png',
-    middleLogo: './logom.png'
+    // الملفات تكون في نفس مجلد index.html داخل مستودع GitHub.
+    rightLogo: 'logoR.png',
+    leftLogo: 'logol.png',
+    middleLogo: 'logom.png'
 };
 
 function createDefaultState(){
@@ -452,10 +489,12 @@ function showToast(message){
 function saveLocal(){
     try{
         localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
-        document.getElementById('saveStatus').textContent='🟢 تم الحفظ: '+new Date().toLocaleTimeString();
+        const status=document.getElementById('saveStatus');
+        if(status) status.textContent='🟢 تم الحفظ: '+new Date().toLocaleTimeString();
     }catch(e){
-        document.getElementById('saveStatus').textContent='🔴 تعذر الحفظ';
-        showToast('حجم المشروع كبير جدًا على التخزين المحلي');
+        const status=document.getElementById('saveStatus');
+        if(status) status.textContent='🟡 الحفظ المحلي غير متاح';
+        // لا نوقف المحرر إذا منع المتصفح localStorage.
     }
 }
 
@@ -506,19 +545,32 @@ function redo(){
 }
 
 function init(){
-    const saved=localStorage.getItem(STORAGE_KEY);
-
-    if(saved){
-        try{
-            const parsed=JSON.parse(saved);
-            if(validateProject(parsed)) state=normalizeProject(parsed);
-        }catch(e){}
+    // نبدأ بالرسم أولًا؛ فشل localStorage لا يجب أن يمنع ظهور صفحات A4.
+    try{
+        const saved=localStorage.getItem(STORAGE_KEY);
+        if(saved){
+            try{
+                const parsed=JSON.parse(saved);
+                if(validateProject(parsed)) state=normalizeProject(parsed);
+            }catch(e){
+                console.warn('تعذر قراءة المشروع المحفوظ:', e);
+            }
+        }
+    }catch(e){
+        console.warn('localStorage غير متاح:', e);
     }
+
+    // فرض شعارات القالب من المستودع على كل صفحة.
+    state.pages.forEach(page=>{
+        page.rightLogo=TEMPLATE_ASSETS.rightLogo;
+        page.leftLogo=TEMPLATE_ASSETS.leftLogo;
+    });
+    state.watermark.url=TEMPLATE_ASSETS.middleLogo;
 
     historyStack=[JSON.stringify(state)];
     historyIndex=0;
 
-    syncWatermarkControls();
+    try{ syncWatermarkControls(); }catch(e){ console.warn(e); }
     render();
 }
 
@@ -561,6 +613,7 @@ function normalizeProject(obj){
 
 function render(){
     const container=document.getElementById('workspace');
+    if(!container) return;
     container.innerHTML='';
 
     if(!state.pages.length){
@@ -1207,7 +1260,7 @@ async function exportImages(){
 function clearProject(){
     if(!confirm('سيتم حذف المشروع المحفوظ وإعادة المحرر للوضع الافتراضي. هل أنت متأكد؟')) return;
 
-    localStorage.removeItem(STORAGE_KEY);
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
     state=createDefaultState();
     activePageIndex=0;
     historyStack=[JSON.stringify(state)];
