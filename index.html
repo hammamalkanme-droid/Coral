@@ -199,7 +199,8 @@ table.morjan-table td{padding:8px;border:1px solid #ddd}
     flex:none;background:#fff
 }
 .logo-box:hover{border-color:var(--secondary)}
-.logo-box img{max-width:100%;max-height:100%;object-fit:contain}
+.logo-box img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.template-logo{cursor:default}
 .header-text{
     font-family:'Amiri',serif;font-size:22px;font-weight:700;
     color:var(--primary);text-align:center;flex:1;min-width:0
@@ -310,6 +311,11 @@ table.morjan-table td{padding:8px;border:1px solid #ddd}
     </div>
 
     <div class="sidebar-content">
+        <div style="font-size:10px;color:#7f8c8d;background:#f8f9fa;border:1px solid #eee;padding:7px;border-radius:5px;line-height:1.6">
+            الشعارات تُستدعى تلقائيًا من ملفات المستودع:<br>
+            <b>logoR.png</b> · <b>logol.png</b> · <b>logom.png</b>
+        </div>
+
         <div class="section-title">إدارة المشروع والصفحات</div>
         <div class="grid-btns">
             <button class="btn btn-action" onclick="undo()">↶ تراجع</button>
@@ -321,8 +327,7 @@ table.morjan-table td{padding:8px;border:1px solid #ddd}
         </div>
 
         <div class="section-title">العلامة المائية</div>
-        <button class="btn btn-full" onclick="document.getElementById('wmInput').click()">رفع صورة العلامة المائية</button>
-        <input type="file" id="wmInput" accept="image/*" hidden onchange="handleWatermark(event)">
+        <div class="btn btn-full" style="cursor:default;text-align:center;background:#f7f8f9">🖼️ الشعار الوسطي: <b>logom.png</b></div>
 
         <div class="range-row">
             <label><span>الشفافية</span><b id="opacityValue">10%</b></label>
@@ -395,17 +400,30 @@ let saveTimer = null;
 let typingTimer = null;
 let selectionRange = null;
 
+// ==========================================
+// 🖼️ شعارات القالب من مستودع GitHub
+// ضع الملفات الثلاثة في نفس مجلد ملف HTML:
+// logoR.png = شعار اليمين
+// logol.png = شعار اليسار
+// logom.png = الشعار الوسطي/العلامة المائية
+// ==========================================
+const TEMPLATE_ASSETS = {
+    rightLogo: './logoR.png',
+    leftLogo: './logol.png',
+    middleLogo: './logom.png'
+};
+
 function createDefaultState(){
     return {
         version:5,
-        watermark:{url:'',opacity:.10,size:80},
+        watermark:{url:TEMPLATE_ASSETS.middleLogo,opacity:.10,size:80},
         pages:[{
             id:uid('page'),
             header:'أصول الفقه | الملخصات',
             footerRight:'فريق النخبة',
             footerLeft:'إعداد: همام الكانمي',
-            rightLogo:'',
-            leftLogo:'',
+            rightLogo:TEMPLATE_ASSETS.rightLogo,
+            leftLogo:TEMPLATE_ASSETS.leftLogo,
             blocks:[
                 {id:uid('b'),type:'title',content:'الدرس الأول: بين الوحي والسنة'},
                 {id:uid('b'),type:'text',content:'اكتب نص الملخص التعليمي هنا بسهولة...'},
@@ -521,13 +539,16 @@ function normalizeProject(obj){
     obj.watermark.size=Number(obj.watermark.size);
     if(!Number.isFinite(obj.watermark.size)) obj.watermark.size=80;
 
+    // لا نحفظ صورة الشعار داخل JSON؛ القالب يستدعيها من GitHub دائمًا.
+    obj.watermark.url=TEMPLATE_ASSETS.middleLogo;
+
     obj.pages=obj.pages.map(page=>({
         id:page.id||uid('page'),
         header:page.header??'',
         footerRight:page.footerRight??'',
         footerLeft:page.footerLeft??'',
-        rightLogo:page.rightLogo||'',
-        leftLogo:page.leftLogo||'',
+        rightLogo:TEMPLATE_ASSETS.rightLogo,
+        leftLogo:TEMPLATE_ASSETS.leftLogo,
         blocks:Array.isArray(page.blocks)?page.blocks.map(block=>({
             id:block.id||uid('b'),
             type:block.type||'text',
@@ -545,7 +566,9 @@ function render(){
     if(!state.pages.length){
         state.pages=[{
             id:uid('page'),header:'',footerRight:'',footerLeft:'',
-            rightLogo:'',leftLogo:'',blocks:[]
+            rightLogo:TEMPLATE_ASSETS.rightLogo,
+            leftLogo:TEMPLATE_ASSETS.leftLogo,
+            blocks:[]
         }];
     }
 
@@ -574,11 +597,11 @@ function render(){
             <div class="page-border">
 
                 <div class="watermark-overlay">
-                    ${state.watermark.url ?
-                        `<img class="watermark-img"
-                              src="${escapeAttr(state.watermark.url)}"
-                              style="opacity:${state.watermark.opacity};width:${state.watermark.size}%">`
-                        : ''}
+                    <img class="watermark-img"
+                         src="${escapeAttr(TEMPLATE_ASSETS.middleLogo)}"
+                         alt="الشعار الوسطي"
+                         style="opacity:${state.watermark.opacity};width:${state.watermark.size}%"
+                         onerror="this.style.display='none'">
                 </div>
 
                 <div class="page-controls">
@@ -590,11 +613,10 @@ function render(){
                 <div class="content-layer">
 
                     <div class="header-section">
-                        <div class="logo-box"
-                             onclick="triggerUpload('rightLogo',${pIndex})">
-                            ${page.rightLogo ?
-                                `<img src="${escapeAttr(page.rightLogo)}">` :
-                                '<span style="font-size:10px;color:#aaa">شعار</span>'}
+                        <div class="logo-box template-logo" title="شعار اليمين: logoR.png">
+                            <img src="${escapeAttr(TEMPLATE_ASSETS.rightLogo)}"
+                                 alt="شعار اليمين"
+                                 onerror="this.style.display='none'">
                         </div>
 
                         <div class="header-text"
@@ -602,11 +624,10 @@ function render(){
                              data-editor="header"
                              data-page="${pIndex}">${page.header}</div>
 
-                        <div class="logo-box"
-                             onclick="triggerUpload('leftLogo',${pIndex})">
-                            ${page.leftLogo ?
-                                `<img src="${escapeAttr(page.leftLogo)}">` :
-                                '<span style="font-size:10px;color:#aaa">شعار</span>'}
+                        <div class="logo-box template-logo" title="شعار اليسار: logol.png">
+                            <img src="${escapeAttr(TEMPLATE_ASSETS.leftLogo)}"
+                                 alt="شعار اليسار"
+                                 onerror="this.style.display='none'">
                         </div>
                     </div>
 
@@ -626,7 +647,7 @@ function render(){
 
                     <div class="page-number">
                         صفحة ${pIndex+1} من ${state.pages.length}
-                        ${pIndex===activePageIndex?'()':''}
+                        ${pIndex===activePageIndex?'(نشطة)':''}
                     </div>
                 </div>
             </div>
@@ -739,15 +760,15 @@ function getBlockClass(type){
 }
 
 function addPage(){
-    const first=state.pages[0]||{rightLogo:'',leftLogo:''};
+    const first=state.pages[0]||{};
 
     state.pages.push({
         id:uid('page'),
         header:'أصول الفقه | الملخصات',
         footerRight:'فريق النخبة',
         footerLeft:'إعداد: همام الكانمي',
-        rightLogo:first.rightLogo||'',
-        leftLogo:first.leftLogo||'',
+        rightLogo:TEMPLATE_ASSETS.rightLogo,
+        leftLogo:TEMPLATE_ASSETS.leftLogo,
         blocks:[]
     });
 
