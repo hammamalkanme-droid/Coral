@@ -4,297 +4,308 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>أداة تصميم ملخصات مرجان - فريق النخبة</title>
+    <!-- مكتبة تصدير الصور -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap');
 
         :root {
-            --primary-color: #1b5e40; /* أخضر مرجان */
-            --secondary-color: #b08d4b; /* ذهبي */
-            --text-color: #222;
-            --bg-color: #eef2f5;
+            --primary: #114a31; /* أخضر مرجان عميق */
+            --primary-light: #1b6b47;
+            --secondary: #c29b49; /* ذهبي أنيق */
+            --secondary-light: #fdfaf3; /* خلفية الملاحظات */
+            --text-dark: #2c3e50;
+            --bg-page: #e8ecef;
         }
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg-color);
+            background-color: var(--bg-page);
             margin: 0;
             display: flex;
-            color: var(--text-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
         }
 
-        /* شريط الأدوات (الجانبي) */
+        /* --- شريط الأدوات --- */
         .toolbar {
-            width: 320px;
-            background: white;
+            width: 340px;
+            background: #ffffff;
             padding: 20px;
             height: 100vh;
-            box-shadow: -2px 0 15px rgba(0,0,0,0.05);
+            box-shadow: -4px 0 20px rgba(0,0,0,0.08);
             position: fixed;
             right: 0;
             top: 0;
             overflow-y: auto;
             z-index: 100;
             box-sizing: border-box;
+            border-left: 3px solid var(--secondary);
         }
 
         .toolbar h2 {
-            color: var(--primary-color);
+            color: var(--primary);
             font-family: 'Amiri', serif;
             text-align: center;
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
+            border-bottom: 2px dashed var(--secondary);
+            padding-bottom: 12px;
             margin-top: 0;
+            font-size: 24px;
         }
 
-        .control-group {
-            margin-bottom: 15px;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e1e4e8;
-        }
+        .section-title { font-size: 14px; color: #7f8c8d; margin-bottom: 10px; font-weight: bold; }
 
+        .control-group { margin-bottom: 20px; }
+        .grid-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        
         .btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 8px;
-            background-color: var(--primary-color);
+            padding: 10px;
+            background-color: var(--primary);
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-family: 'Tajawal', sans-serif;
-            font-weight: bold;
-            font-size: 14px;
-            transition: 0.2s;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
-        .btn:hover { background-color: #12452e; }
-        .btn-danger { background-color: #d32f2f; }
-        .btn-danger:hover { background-color: #b71c1c; }
-        .btn-secondary { background-color: var(--secondary-color); color: #fff; }
-        .btn-secondary:hover { background-color: #94753b; }
+        .btn:hover { background-color: var(--primary-light); transform: translateY(-2px); }
+        .btn-full { width: 100%; grid-column: span 2; }
+        .btn-gold { background-color: var(--secondary); color: #fff; }
+        .btn-gold:hover { background-color: #a8853b; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-export { background: linear-gradient(45deg, #27ae60, #2ecc71); font-size: 15px; padding: 12px;}
+        .btn-export:hover { box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4); }
 
-        input[type="range"] { width: 100%; margin-top: 5px; margin-bottom: 15px; }
-        label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; color: #444; }
+        input[type="range"] { width: 100%; margin: 8px 0 15px 0; accent-color: var(--primary); }
+        label { font-size: 13px; font-weight: bold; color: #444; }
 
-        /* منطقة مساحة العمل */
+        /* --- مساحة العمل والورقة --- */
         .workspace {
-            margin-right: 320px;
+            margin-right: 340px;
             padding: 40px;
-            width: calc(100% - 320px);
+            width: calc(100% - 340px);
             display: flex;
             justify-content: center;
             box-sizing: border-box;
         }
 
-        /* صفحة A4 */
         .a4-page {
             width: 210mm;
             min-height: 297mm;
             background: white;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             position: relative;
             box-sizing: border-box;
-            padding: 12mm; /* مسافة بين حافة الورقة والإطار */
+            padding: 10mm;
             display: flex;
             flex-direction: column;
         }
 
-        /* الإطار الداخلي للورقة */
+        /* الإطار الاحترافي المزدوج */
         .page-border {
             flex-grow: 1;
-            border: 4px double var(--primary-color);
-            padding: 15mm;
+            border: 3px solid var(--primary);
+            padding: 12mm 15mm;
             position: relative;
             display: flex;
             flex-direction: column;
+            border-radius: 4px;
+        }
+        .page-border::before {
+            content: ''; position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid var(--secondary);
             border-radius: 2px;
-            outline: 1px solid var(--primary-color);
-            outline-offset: -7px;
-        }
-
-        /* العلامة المائية */
-        .watermark-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 0;
             pointer-events: none;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            z-index: 5;
         }
 
-        .watermark-container img {
-            max-width: 75%;
-            max-height: 75%;
-            opacity: 0.15;
-            display: none;
+        /* --- العلامة المائية --- */
+        .watermark-container {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0; pointer-events: none;
+            width: 100%; display: flex;
+            justify-content: center; align-items: center;
         }
+        .watermark-container img { max-width: 80%; max-height: 80%; opacity: 0.1; display: none; }
 
-        /* المحتوى الفعلي فوق العلامة المائية */
-        .content-layer {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
+        /* --- طبقة المحتوى --- */
+        .content-layer { position: relative; z-index: 10; display: flex; flex-direction: column; flex-grow: 1; }
 
-        /* رأس الورقة */
+        /* الهيدر العلوي */
         .header-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 12px;
-            margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 8px; margin-bottom: 15px;
         }
 
         .logo-box {
-            width: 75px;
-            height: 75px;
-            border: 1px dashed #aaa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            background: #fafafa;
-            overflow: hidden;
-            border-radius: 4px;
+            width: 60px; height: 60px; /* تم التصغير بناء على طلبك */
+            border: 1px dashed #bdc3c7; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; background: #f8f9fa; overflow: hidden;
         }
-        
-        .logo-box img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: contain; /* يحافظ على أبعاد الشعار دون تشويه */
-            display: none; 
-        }
-        .logo-box span { font-size: 11px; color: #888; text-align: center; line-height: 1.4; }
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; display: none; }
+        .logo-box span { font-size: 10px; color: #95a5a6; text-align: center; }
 
         .header-text {
-            font-family: 'Amiri', serif;
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-align: center;
-            flex-grow: 1;
-            padding: 0 15px;
+            font-family: 'Amiri', serif; font-size: 22px; font-weight: bold;
+            color: var(--primary); text-align: center; flex-grow: 1;
             outline: none;
         }
 
-        /* العنوان الرئيسي (عريض) */
+        /* العنوان الرئيسي */
         .main-title {
-            font-family: 'Amiri', serif;
-            font-size: 34px;
-            color: var(--secondary-color);
-            text-align: center;
-            margin: 5px 0 25px 0;
-            font-weight: bold;
-            outline: none;
+            font-family: 'Amiri', serif; font-size: 32px;
+            color: var(--secondary); text-align: center;
+            margin: 0 0 20px 0; font-weight: bold; outline: none;
         }
-        .main-title span { color: var(--primary-color); }
+        .main-title span { color: var(--primary); }
 
-        /* منطقة النصوص والفقرات */
+        /* --- منطقة العناصر الديناميكية --- */
         .content-area { flex-grow: 1; }
-        .dynamic-block { margin-bottom: 18px; outline: none; }
         
-        .block-title { font-size: 19px; font-weight: bold; color: var(--primary-color); margin-bottom: 8px; }
-        .block-text { font-size: 16px; line-height: 1.8; text-align: justify; color: #222; }
-        .block-options { list-style-type: none; padding: 0; margin-top: 10px; }
-        .block-options li { font-weight: bold; margin-bottom: 8px; font-size: 15px; }
-        .block-options li::before { content: "■ "; color: var(--secondary-color); font-size: 18px; vertical-align: middle; }
+        .block-wrapper { position: relative; margin-bottom: 15px; transition: 0.3s; }
+        
+        /* زر الحذف الذكي */
+        .delete-btn {
+            position: absolute; right: -35px; top: 5px;
+            background: #e74c3c; color: white;
+            border: none; border-radius: 50%;
+            width: 24px; height: 24px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; opacity: 0; transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 50;
+        }
+        .block-wrapper:hover .delete-btn { opacity: 1; }
+        
+        /* تأثير التعديل */
+        [contenteditable="true"] { outline: none; transition: 0.2s; }
+        [contenteditable="true"]:hover { background-color: rgba(194, 155, 73, 0.05); border-radius: 4px; }
 
-        /* التذييل (المربعات السفلية) */
+        /* 1. النصوص العادية والعناوين */
+        .block-title { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
+        .block-text { font-size: 16px; line-height: 1.8; text-align: justify; color: var(--text-dark); }
+        .block-list { list-style: none; padding: 0; margin: 10px 0; }
+        .block-list li { margin-bottom: 8px; font-size: 16px; position: relative; padding-right: 20px; }
+        .block-list li::before { content: "❖"; color: var(--secondary); position: absolute; right: 0; font-size: 14px; top: 3px; }
+
+        /* 2. المربعات الاحترافية (الأدوات الجديدة) */
+        .info-box {
+            background-color: var(--secondary-light);
+            border-right: 4px solid var(--secondary);
+            padding: 12px 15px; border-radius: 4px 0 0 4px;
+            font-size: 15.5px; line-height: 1.7;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .info-box strong { color: var(--primary); font-size: 17px; }
+
+        .def-box {
+            background-color: rgba(17, 74, 49, 0.04);
+            border: 1px solid rgba(17, 74, 49, 0.15);
+            padding: 15px; border-radius: 8px;
+            text-align: center; font-size: 16px;
+        }
+        .def-box .def-title {
+            display: block; font-family: 'Amiri', serif; font-size: 22px;
+            color: var(--primary); font-weight: bold; margin-bottom: 5px;
+        }
+
+        /* 3. جدول المقارنة */
+        .compare-table {
+            display: grid; grid-template-columns: 1fr 1fr;
+            border: 2px solid var(--primary); border-radius: 8px; overflow: hidden;
+            text-align: center; margin-top: 10px;
+        }
+        .compare-header { background: var(--primary); color: white; padding: 10px; font-weight: bold; font-size: 17px; }
+        .compare-cell { padding: 12px; border-top: 1px solid #ddd; background: white; font-size: 15px; line-height: 1.6; }
+        .compare-cell:first-child, .compare-header:first-child { border-left: 1px solid #ddd; }
+
+        /* --- التذييل المطور (Footer) --- */
         .footer-section {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
+            display: flex; justify-content: space-between; margin-top: auto; padding-top: 25px;
         }
-
         .footer-box {
-            border: 1.5px solid var(--primary-color);
-            padding: 8px 25px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            outline: none;
-            background: white;
-            color: var(--text-color);
-            min-width: 150px;
-            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #ffffff; padding: 10px 25px; border-radius: 8px;
+            font-weight: 700; font-size: 14.5px; outline: none;
+            box-shadow: 0 4px 12px rgba(17, 74, 49, 0.2);
+            border: 1px solid var(--secondary);
+            min-width: 160px; text-align: center;
         }
 
-        /* تأثيرات التحرير */
-        [contenteditable="true"]:hover {
-            background-color: rgba(212, 175, 55, 0.1);
-            cursor: text;
-            border-radius: 4px;
-        }
-
-        /* === إعدادات الطباعة === */
+        /* إخفاء عناصر أثناء التصدير كصورة أو الطباعة */
+        .exporting .delete-btn { display: none !important; }
+        .exporting [contenteditable="true"]:hover { background-color: transparent !important; }
+        
         @media print {
             @page { size: A4; margin: 0; }
             body { background: white; margin: 0; }
-            .toolbar, .no-print { display: none !important; }
-            .workspace { margin: 0; padding: 0; width: 100%; display: block; }
-            .a4-page { 
-                margin: 0; 
-                box-shadow: none; 
-                width: 210mm; 
-                height: 297mm; 
-                page-break-after: always;
-                /* إجبار المتصفح على طباعة الألوان والخلفيات والعلامة المائية */
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
+            .toolbar { display: none !important; }
+            .workspace { margin: 0; padding: 0; width: 100%; }
+            .a4-page { margin: 0; box-shadow: none; width: 210mm; height: 297mm; page-break-after: always; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .delete-btn { display: none !important; }
             .logo-box { border: none; background: transparent; }
             .logo-box span { display: none; }
-            [contenteditable="true"]:hover { background-color: transparent; }
         }
     </style>
 </head>
 <body>
 
     <!-- شريط الأدوات -->
-    <div class="toolbar no-print">
-        <h2>لوحة التحكم</h2>
+    <div class="toolbar">
+        <h2>أدوات التصميم</h2>
         
         <div class="control-group">
-            <label>إضافة محتوى للورقة:</label>
-            <button class="btn" onclick="addHeading()">+ إضافة عنوان جانبي</button>
-            <button class="btn" onclick="addParagraph()">+ إضافة فقرة نصية</button>
-            <button class="btn" onclick="addOptions()">+ إضافة سؤال بخيارات</button>
+            <div class="section-title">إضافة عناصر أساسية:</div>
+            <div class="grid-btns">
+                <button class="btn" onclick="addElement('title')">عنوان جانبي</button>
+                <button class="btn" onclick="addElement('text')">فقرة نصية</button>
+                <button class="btn btn-full" onclick="addElement('list')">قائمة منسقة (نقاط)</button>
+            </div>
         </div>
 
         <div class="control-group">
-            <label>العلامة المائية (بالوسط):</label>
+            <div class="section-title">أدوات مرجان الاحترافية:</div>
+            <div class="grid-btns">
+                <button class="btn btn-gold" onclick="addElement('info')">💡 مربع ملاحظة</button>
+                <button class="btn btn-gold" onclick="addElement('def')">📌 مربع تعريف</button>
+                <button class="btn btn-gold btn-full" onclick="addElement('table')">⚖️ جدول مقارنة</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div class="section-title">إعدادات العلامة المائية:</div>
             <input type="file" id="watermarkInput" accept="image/*" style="display: none;" onchange="loadWatermark(event)">
-            <button class="btn btn-secondary" onclick="document.getElementById('watermarkInput').click()">رفع شعار المشروع</button>
+            <button class="btn btn-full" style="background:#34495e;" onclick="document.getElementById('watermarkInput').click()">رفع شعار للوسط</button>
             
             <label>الشفافية:</label>
-            <input type="range" id="opacityRange" min="0" max="100" value="15" oninput="updateWatermark()">
+            <input type="range" id="opacityRange" min="0" max="100" value="10" oninput="updateWatermark()">
             
             <label>الحجم:</label>
-            <input type="range" id="sizeRange" min="20" max="150" value="75" oninput="updateWatermark()">
+            <input type="range" id="sizeRange" min="20" max="150" value="80" oninput="updateWatermark()">
         </div>
 
-        <div class="control-group">
-            <button class="btn btn-danger" onclick="clearContent()">🗑 تفريغ المحتوى</button>
-            <button class="btn" style="background-color: #27ae60;" onclick="window.print()">🖨 طباعة / حفظ PDF</button>
+        <div class="control-group" style="margin-top: 30px;">
+            <button class="btn btn-full btn-export" onclick="exportToImage()">📸 تحميل كصورة عالية الدقة</button>
+            <button class="btn btn-full" style="background:#2c3e50; margin-top:8px;" onclick="window.print()">🖨️ حفظ كـ PDF</button>
+            <button class="btn btn-full btn-danger" style="margin-top:8px;" onclick="clearContent()">🗑 تفريغ المحتوى</button>
         </div>
-        <p style="font-size:12px; color:#777; text-align:center; line-height:1.5;">ملاحظة: اضغط على أي نص أو عنوان لتعديله مباشرة.</p>
     </div>
 
     <!-- مساحة العمل -->
     <div class="workspace">
         <div class="a4-page" id="printableArea">
-            
-            <!-- الإطار الداخلي -->
             <div class="page-border">
                 
                 <!-- العلامة المائية -->
@@ -302,24 +313,18 @@
                     <img id="watermarkImage" src="" alt="Watermark">
                 </div>
 
-                <!-- طبقة المحتوى -->
                 <div class="content-layer">
                     
-                    <!-- الرأس -->
+                    <!-- الهيدر -->
                     <div class="header-section">
-                        <!-- شعار المشروع (اليسار) -->
                         <div class="logo-box" onclick="document.getElementById('projectLogoInput').click()">
                             <span id="projText">شعار<br>المشروع</span>
                             <img id="projectLogoImg" src="">
                             <input type="file" id="projectLogoInput" accept="image/*" style="display: none;" onchange="loadImage(event, 'projectLogoImg', 'projText')">
                         </div>
 
-                        <!-- النص الأوسط -->
-                        <div class="header-text" contenteditable="true">
-                            أصول الفقه | الملخصات
-                        </div>
+                        <div class="header-text" contenteditable="true">أصول الفقه | الملخصات</div>
 
-                        <!-- شعار الفريق (اليمين) -->
                         <div class="logo-box" onclick="document.getElementById('teamLogoInput').click()">
                             <span id="teamText">شعار<br>الفريق</span>
                             <img id="teamLogoImg" src="">
@@ -327,113 +332,154 @@
                         </div>
                     </div>
 
-                    <!-- العنوان العريض -->
+                    <!-- العنوان -->
                     <div class="main-title" contenteditable="true">
-                        <span>بين الوحي</span> والسنة
+                        <span>الدرس الأول:</span> بين الوحي والسنة
                     </div>
 
-                    <!-- محتوى الملخص (الديناميكي) -->
+                    <!-- المحتوى الديناميكي -->
                     <div class="content-area" id="contentArea">
-                        <div class="dynamic-block block-title" contenteditable="true">مقدمة الدرس:</div>
-                        <div class="dynamic-block block-text" contenteditable="true">انقر هنا للبدء في كتابة فقرتك. يمكنك إضافة فقرات أو عناوين إضافية من القائمة الجانبية لتخصيص الملخص كما تشاء.</div>
                         
-                        <div class="dynamic-block block-title" contenteditable="true">ما على المسلم معرفته؟</div>
-                        <div class="dynamic-block block-text" contenteditable="true">سيظهر النص والصور الذي تقوم بنسخها هنا تلقائياً</div>
-                        
-                        <div class="dynamic-block block-text" contenteditable="true">
-                            <strong>السؤال هنا يطرح نفسه!</strong>
-                            <ul class="block-options">
-                                <li>الخيار الأول</li>
-                                <li>الخيار الثاني</li>
-                                <li>الخيار الثالث</li>
-                            </ul>
+                        <!-- أمثلة جاهزة كبداية -->
+                        <div class="block-wrapper">
+                            <button class="delete-btn" onclick="this.parentElement.remove()" title="حذف">✖</button>
+                            <div class="block-title" contenteditable="true">مقدمة الدرس:</div>
                         </div>
+                        
+                        <div class="block-wrapper">
+                            <button class="delete-btn" onclick="this.parentElement.remove()">✖</button>
+                            <div class="block-text" contenteditable="true">هذا القالب الجديد مصمم خصيصاً ليناسب المشاريع التعليمية باحترافية عالية. يمكنك التعديل على أي نص، حذف أي عنصر، وإضافة ما تحتاجه من القائمة الجانبية.</div>
+                        </div>
+
+                        <div class="block-wrapper">
+                            <button class="delete-btn" onclick="this.parentElement.remove()">✖</button>
+                            <div class="info-box" contenteditable="true">
+                                <strong>💡 ملاحظة هامة:</strong> السنة النبوية هي المصدر الثاني للتشريع الإسلامي بعد القرآن الكريم.
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- التذييل (المربعات) -->
+                    <!-- التذييل الاحترافي -->
                     <div class="footer-section">
-                        <div class="footer-box" contenteditable="true">
-                            قناة التيليجرام: @Morjan_Project
-                        </div>
-                        <div class="footer-box" contenteditable="true">
-                            إعداد: همام الكانمي
-                        </div>
+                        <div class="footer-box" contenteditable="true">@Morjan_Project</div>
+                        <div class="footer-box" contenteditable="true">إعداد: همام الكانمي</div>
                     </div>
 
-                </div> <!-- نهاية طبقة المحتوى -->
-            </div> <!-- نهاية الإطار -->
-            
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- أكواد الجافاسكربت -->
     <script>
+        // دوال الصور والعلامة المائية
         function loadImage(event, imgId, textId) {
-            const image = document.getElementById(imgId);
-            const text = document.getElementById(textId);
             const file = event.target.files[0];
             if (file) {
-                image.src = URL.createObjectURL(file);
-                image.style.display = 'block';
-                text.style.display = 'none';
+                document.getElementById(imgId).src = URL.createObjectURL(file);
+                document.getElementById(imgId).style.display = 'block';
+                document.getElementById(textId).style.display = 'none';
             }
         }
 
         function loadWatermark(event) {
-            const watermark = document.getElementById('watermarkImage');
             const file = event.target.files[0];
             if (file) {
-                watermark.src = URL.createObjectURL(file);
-                watermark.style.display = 'block';
+                const img = document.getElementById('watermarkImage');
+                img.src = URL.createObjectURL(file);
+                img.style.display = 'block';
             }
         }
 
         function updateWatermark() {
-            const watermark = document.getElementById('watermarkImage');
-            const opacity = document.getElementById('opacityRange').value / 100;
-            const size = document.getElementById('sizeRange').value;
-            watermark.style.opacity = opacity;
-            watermark.style.width = size + '%';
+            const img = document.getElementById('watermarkImage');
+            img.style.opacity = document.getElementById('opacityRange').value / 100;
+            img.style.width = document.getElementById('sizeRange').value + '%';
         }
 
-        function addHeading() {
+        // دالة إنشاء العناصر الديناميكية مع زر الحذف
+        function addElement(type) {
             const area = document.getElementById('contentArea');
-            const div = document.createElement('div');
-            div.className = 'dynamic-block block-title';
-            div.contentEditable = "true";
-            div.innerText = 'عنوان جانبي جديد';
-            area.appendChild(div);
-        }
-
-        function addParagraph() {
-            const area = document.getElementById('contentArea');
-            const div = document.createElement('div');
-            div.className = 'dynamic-block block-text';
-            div.contentEditable = "true";
-            div.innerText = 'اكتب نص الفقرة هنا...';
-            area.appendChild(div);
-        }
-
-        function addOptions() {
-            const area = document.getElementById('contentArea');
-            const div = document.createElement('div');
-            div.className = 'dynamic-block block-text';
-            div.contentEditable = "true";
-            div.innerHTML = `
-                <strong>سؤال أو نقطة جديدة:</strong>
-                <ul class="block-options">
-                    <li>الخيار الأول</li>
-                    <li>الخيار الثاني</li>
-                    <li>الخيار الثالث</li>
-                </ul>
-            `;
-            area.appendChild(div);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'block-wrapper';
+            
+            let innerHTML = `<button class="delete-btn" onclick="this.parentElement.remove()" title="حذف العنصر">✖</button>`;
+            
+            switch(type) {
+                case 'title':
+                    innerHTML += `<div class="block-title" contenteditable="true">عنوان جانبي جديد</div>`;
+                    break;
+                case 'text':
+                    innerHTML += `<div class="block-text" contenteditable="true">اكتب النص أو الفقرة هنا...</div>`;
+                    break;
+                case 'list':
+                    innerHTML += `
+                        <ul class="block-list" contenteditable="true">
+                            <li>النقطة الأولى</li>
+                            <li>النقطة الثانية</li>
+                            <li>النقطة الثالثة</li>
+                        </ul>`;
+                    break;
+                case 'info':
+                    innerHTML += `
+                        <div class="info-box" contenteditable="true">
+                            <strong>💡 ملاحظة هامة:</strong> اكتب نص الملاحظة هنا...
+                        </div>`;
+                    break;
+                case 'def':
+                    innerHTML += `
+                        <div class="def-box" contenteditable="true">
+                            <span class="def-title">مصطلح جديد</span>
+                            اكتب تعريف المصطلح أو المفهوم بشكل واضح هنا.
+                        </div>`;
+                    break;
+                case 'table':
+                    innerHTML += `
+                        <div class="compare-table">
+                            <div class="compare-header" contenteditable="true">وجه المقارنة الأول</div>
+                            <div class="compare-header" contenteditable="true">وجه المقارنة الثاني</div>
+                            <div class="compare-cell" contenteditable="true">اكتب النص هنا</div>
+                            <div class="compare-cell" contenteditable="true">اكتب النص هنا</div>
+                        </div>`;
+                    break;
+            }
+            
+            wrapper.innerHTML = innerHTML;
+            area.appendChild(wrapper);
+            // التمرير للأسفل تلقائياً عند الإضافة
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
         function clearContent() {
-            if(confirm("هل أنت متأكد من تفريغ المساحة الوسطى بالكامل؟")) {
+            if(confirm("هل أنت متأكد من مسح جميع عناصر الملخص؟")) {
                 document.getElementById('contentArea').innerHTML = '';
             }
+        }
+
+        // دالة التصدير كصورة عالية الدقة
+        function exportToImage() {
+            const element = document.getElementById('printableArea');
+            
+            // إضافة كلاس لإخفاء أزرار الحذف وتأثيرات التحديد أثناء التصوير
+            document.body.classList.add('exporting');
+            
+            // تأخير بسيط لضمان تطبيق كلاس الإخفاء
+            setTimeout(() => {
+                html2canvas(element, {
+                    scale: 3, // جودة عالية جداً
+                    useCORS: true,
+                    backgroundColor: "#ffffff"
+                }).then(canvas => {
+                    let link = document.createElement('a');
+                    link.download = 'ملخص_مرجان_تصميم.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    // إزالة الكلاس بعد الانتهاء
+                    document.body.classList.remove('exporting');
+                });
+            }, 100);
         }
     </script>
 </body>
